@@ -46,7 +46,7 @@ available.  These are arguably bad design decisions which may encourage you
 to seek your caching pleasure elsewhere. On the other hand, pull requests
 are welcome. 
 
-Since this module is intended to be run under Perl 5.8 (but perferably much
+Since this module is intended to be run under Perl 5.8 (but preferably much
 much more recent Perls) it sadly eschews fancy object systems like Moo. It
 doesn't require any dependencies beyond core modules.  I maybe would have
 called it Cache::Tiny, but then people might use it.
