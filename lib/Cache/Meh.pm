@@ -47,7 +47,9 @@ to seek your caching pleasure elsewhere. On the other hand, pull requests
 are welcome. 
 
 Since this module is intended to be run under Perl 5.8 (but perferably much
-much more recent Perls) it sadly eschews fancy object systems like Moo.
+much more recent Perls) it sadly eschews fancy object systems like Moo. It
+doesn't require any dependencies beyond core modules.  I maybe would have
+called it Cache::Tiny, but then people might use it.
 
 Besides, this is a cache of indifferent quality. You probably ought to be
 using something awesome like L<CHI> or L<Cache::Cache> or L<Cache>.
