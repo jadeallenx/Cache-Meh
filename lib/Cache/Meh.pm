@@ -13,26 +13,38 @@ use File::Temp qw(tempfile);
 
     use 5.008;
     use Cache::Meh;
+    use Digest::SHA qw(sha1);
 
     my $cache = Cache::Meh->new(
         filename => 'blort',
         validity => 10, # seconds
         lookup => sub { 
             my $key = shift;
-            really_expensive_operation($key);
+            return sha1($key);
         },
     );
 
     my $value = $cache->get('some_key');
 
-    print "$value\n";
+    if ( sha1('some_key') eq $value ) {
+        print "equal\n";
+    }
+    else {
+        print "not equal\n";
+    }
 
 =head1 OVERVIEW
 
 This module is intended to implement a very simple memory cache where the internal
-cache state is serialized to disk by L<Storable> so that the data structure
+cache state is serialized to disk by L<Storable> so that the cached data
 persists beyond a single execution environment which makes it suitable for
 things like cron tasks or CGI handlers and the like.
+
+Cache state is stored to disk when a key is set in the cache; keys are only
+purged from the cache when they expire and there is no C<lookup> function
+available.  These are arguably bad design decisions which may encourage you
+to seek your caching pleasure elsewhere. On the other hand, pull requests
+are welcome. 
 
 Since this module is intended to be run under Perl 5.8 (but perferably much
 much more recent Perls) it sadly eschews fancy object systems like Moo.
@@ -44,10 +56,18 @@ using something awesome like L<CHI> or L<Cache::Cache> or L<Cache>.
 
 This is the filename for your L<Storable> file. Required.
 
+The file is written to the "temporary" path as provided by L<File::Spec> 
+C<tmpdir>. On Unix systems, you may influence this directory by
+setting the C<TMPDIR> environment variable.
+
 =cut
 
 sub filename {
-    my $self = shift;
+    my ($self, $f) = @_;
+
+    if ( defined $f ) {
+        $self->{filename} = $f;
+    }
 
     return $self->{filename};
 }
@@ -56,9 +76,11 @@ sub filename {
 
 Pass an argument to set it; no argument to get its current value.
 
-How long keys should be considered valid in seconds.  Each key has an 
-insert time; when the insert time + validity is greater than the current 
-time, the cache refreshes the cached value by executing the lookup 
+How long keys should be considered valid in seconds. Arguments must
+be positive integers.
+
+Each key has an insert time; when the insert time + validity is greater than
+the current time, the cache refreshes the cached value by executing the lookup 
 function or evicting the key from the cache if no lookup function is provided.
 
 This value defaults to 300 seconds (5 minutes) if not provided.
@@ -69,8 +91,13 @@ sub validity {
     my $self = shift;
     my $validity = shift;
 
-    if ( $validity ) {
-        $self->{validity} = $validity+0;
+    if ( defined $validity ) {
+        if ( $validity > 0 ) {
+            $self->{validity} = int($validity);
+        }
+        else {
+            confess "$validity is not a positive integer\n";
+        }
     }
 
     return $self->{validity};
@@ -104,7 +131,8 @@ sub lookup {
 =method new
 
 A constructor. You must provide the filename. You may optionally provide
-a validity time and lookup function.
+a validity time and lookup function. The cache state is loaded (if available)
+as part of object construction.
 
 =cut
 
@@ -129,8 +157,6 @@ sub new {
         $self->validity(300);
     }
 
-    $self->{_path} = 
-
     $self->lookup($args{lookup}) if exists $args{lookup};
 
     return $self;
@@ -141,12 +167,23 @@ sub _load {
 
     my $fname = catfile(tmpdir(), $self->filename());
 
-    if ( -e $fname && -r _ ) {
-        return retrieve($fname);
+    if ( -e $fname ) {
+        if ( -r $fname ) {
+            return retrieve($fname);
+        }
+        else {
+            confess "$fname exists but is not readable.\n";
+        }
     }
 
     return {};
 }
+
+# This method stores the new cache file into a temporary file, then renames the tempfile
+# to the cache state file name, which should help protect against new file write failures,
+# leaving at least *some* state that will persist. I guess you could call this "atomic"
+# but there are still a ton of race conditions in the IO layer which could bite you in the
+# rear-end.
 
 sub _store {
     my $self = shift;
@@ -167,10 +204,47 @@ sub _store {
 Takes a key which can be any valid Perl hash key term. Returns the cached
 value or undef if no lookup function is defined.
 
+=cut
+
+sub get {
+    my ($self, $key) = @_;
+
+    if ( exists $self->{'~~~~cache'}->{$key} ) {
+        my $i = $self->{'~~~~cache'}->{$key}->{'insert_time'} + $self->validity;
+        return $self->{'~~~~cache'}->{$key}->{'value'} if ( time < $i ) ;
+    } 
+
+    if ( exists $self->{lookup} && ref($self->{lookup}) eq 'CODE' ) {
+        my $value = $self->{lookup}->($key);
+        $self->set( $key, $value );
+        return $value;
+    }
+
+    if ( exists $self->{'~~~~cache'}->{$key} ) {
+        delete $self->{'~~~~cache'}->{$key};
+        $self->_store();
+    }
+
+    return undef;
+}
+
 =method set
 
-Takes a key and a value which is inserted into the cache.
+Takes a key and a value which is unconditionally inserted into the cache. Returns the cache object.
 
+The cache state is serialized during set operations.
 
+=cut
+
+sub set {
+    my ($self, $key, $value) = @_;
+
+    $self->{'~~~~cache'}->{$key}->{'value'} = $value;
+    $self->{'~~~~cache'}->{$key}->{'insert_time'} = time;
+
+    $self->_store();
+
+    return $self;
+}
 
 1;
