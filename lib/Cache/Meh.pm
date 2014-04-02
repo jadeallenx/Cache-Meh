@@ -6,6 +6,7 @@ use Carp qw(confess);
 use Storable qw(nstore retrieve);
 use File::Spec::Functions qw(tmpdir catfile);
 use File::Temp qw(tempfile);
+use File::Copy qw(move);
 
 # ABSTRACT: A cache of indifferent quality
 
@@ -181,11 +182,11 @@ sub _load {
     return {};
 }
 
-# This method stores the new cache file into a temporary file, then renames the tempfile
-# to the cache state file name, which should help protect against new file write failures,
-# leaving at least *some* state that will persist. I guess you could call this "atomic"
-# but there are still a ton of race conditions in the IO layer which could bite you in the
-# rear-end.
+# This method stores the new cache file into a temporary file, then renames the
+# tempfile to the cache state file name, which should help protect against
+# new file write failures, leaving at least *some* state that will persist. I
+# guess you could call this "atomic" but there are still a ton of race
+# conditions in the IO layer which could bite you in the rear-end.
 
 sub _store {
     my $self = shift;
@@ -196,7 +197,8 @@ sub _store {
         confess "Couldn't store cache in $filename: $!\n";
 
     my $fname = catfile(tmpdir(), $self->filename());
-    rename $filename, $fname or confess "Couldn't rename $filename to $fname: $!\n";
+    move($filename, $fname) or 
+        confess "Couldn't rename $filename to $fname: $!\n";
 
     return 1;
 }
