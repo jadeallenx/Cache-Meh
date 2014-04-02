@@ -1,6 +1,8 @@
 Change history for Cache-Meh
 
 {{$NEXT}}
+
+0.02        2014-04-01
             Instead of rename, use File::Copy::move to be more portable.
 
 0.01        2014-03-26

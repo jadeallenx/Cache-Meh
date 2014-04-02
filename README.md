@@ -4,7 +4,7 @@ Cache::Meh - A cache of indifferent quality
 
 # VERSION
 
-version 0.01
+version 0.02
 
 # SYNOPSIS
 
