@@ -4,7 +4,7 @@ Cache::Meh - A cache of indifferent quality
 
 # VERSION
 
-version 0.02
+version 0.03
 
 # SYNOPSIS
 
@@ -33,7 +33,7 @@ version 0.02
 # OVERVIEW
 
 This module is intended to implement a very simple memory cache where the internal
-cache state is serialized to disk by [Storable](http://search.cpan.org/perldoc?Storable) so that the cached data
+cache state is serialized to disk by [Storable](https://metacpan.org/pod/Storable) so that the cached data
 persists beyond a single execution environment which makes it suitable for
 things like cron tasks or CGI handlers and the like.
 
@@ -49,15 +49,15 @@ doesn't require any dependencies beyond core modules.  I maybe would have
 called it Cache::Tiny, but then people might use it.
 
 Besides, this is a cache of indifferent quality. You probably ought to be
-using something awesome like [CHI](http://search.cpan.org/perldoc?CHI) or [Cache::Cache](http://search.cpan.org/perldoc?Cache::Cache) or [Cache](http://search.cpan.org/perldoc?Cache).
+using something awesome like [CHI](https://metacpan.org/pod/CHI) or [Cache::Cache](https://metacpan.org/pod/Cache::Cache) or [Cache](https://metacpan.org/pod/Cache).
 
 # ATTRIBUTES
 
 ## filename
 
-This is the filename for your [Storable](http://search.cpan.org/perldoc?Storable) file. Required.
+This is the filename for your [Storable](https://metacpan.org/pod/Storable) file. Required.
 
-The file is written to the "temporary" path as provided by [File::Spec](http://search.cpan.org/perldoc?File::Spec) 
+The file is written to the "temporary" path as provided by [File::Spec](https://metacpan.org/pod/File::Spec) 
 `tmpdir`. On Unix systems, you may influence this directory by
 setting the `TMPDIR` environment variable.
 

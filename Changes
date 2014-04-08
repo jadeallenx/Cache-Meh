@@ -2,6 +2,9 @@ Change history for Cache-Meh
 
 {{$NEXT}}
 
+0.03        2014-04-07
+            Close temp filehandle for better Windows compatibility
+
 0.02        2014-04-01
             Instead of rename, use File::Copy::move to be more portable.
 
