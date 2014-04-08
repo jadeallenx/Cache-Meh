@@ -196,6 +196,11 @@ sub _store {
     nstore($self->{'~~~~cache'}, $filename) or 
         confess "Couldn't store cache in $filename: $!\n";
 
+    # Unix doesn't care if the filehandle is still open, but Windows
+    # will not allow a move unless there are no open handles to the
+    # tempfile.
+    close $fh or confess "Couldn't close filehandle for $filename: $!\n";
+
     my $fname = catfile(tmpdir(), $self->filename());
     move($filename, $fname) or 
         confess "Couldn't rename $filename to $fname: $!\n";
