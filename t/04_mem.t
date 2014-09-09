@@ -3,7 +3,6 @@
 use strict;
 use Test::More;
 use Cache::Meh;
-use Data::Dumper;
 use File::Spec::Functions qw(tmpdir catfile);
 
 plan tests => 9;
