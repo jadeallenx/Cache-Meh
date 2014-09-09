@@ -41,6 +41,8 @@ cache state is serialized to disk by L<Storable> so that the cached data
 persists beyond a single execution environment which makes it suitable for
 things like cron tasks or CGI handlers and the like.
 
+You may optionally disable disk access by setting the C<only_memory> attribute.
+
 Cache state is stored to disk when a key is set in the cache; keys are only
 purged from the cache when they expire and there is no C<lookup> function
 available.  These are arguably bad design decisions which may encourage you
@@ -57,7 +59,8 @@ using something awesome like L<CHI> or L<Cache::Cache> or L<Cache>.
 
 =attr filename
 
-This is the filename for your L<Storable> file. Required.
+This is the filename for your L<Storable> file. Required unless you
+specify C<only_memory>.
 
 The file is written to the "temporary" path as provided by L<File::Spec> 
 C<tmpdir>. On Unix systems, you may influence this directory by
@@ -73,6 +76,24 @@ sub filename {
     }
 
     return $self->{filename};
+}
+
+=attr only_memory
+
+If this attribute is set, then B<DO NOT> access the disk for reads or 
+writes. Only store cache values in memory. This option is mutually
+exclusive from the C<filename> attribute above.
+
+=cut
+
+sub only_memory {
+    my ($self, $m) = @_;
+
+    if ( defined $m ) {
+        $self->{only_memory} = $m;
+    }
+
+    return $self->{only_memory};
 }
 
 =attr validity
@@ -133,9 +154,9 @@ sub lookup {
 
 =method new
 
-A constructor. You must provide the filename. You may optionally provide
-a validity time and lookup function. The cache state is loaded (if available)
-as part of object construction.
+A constructor. You must provide the filename unless C<only_memory> is set. 
+You may optionally provide a validity time and lookup function. The cache state
+is loaded (if available) as part of object construction.
 
 =cut
 
@@ -147,9 +168,16 @@ sub new {
 
     bless $self, $class;
 
-    confess "You must give a filename" unless exists $args{filename};
+    if ( exists $args{only_memory} ) {
+        $self->only_memory($args{only_memory});
+    }
+    elsif ( exists $args{filename} ) {
+        $self->filename($args{filename});
+    }
+    else {
+        confess "You must give a filename or set only_memory";
+    }
 
-    $self->filename($args{filename});
 
     $self->{'~~~~cache'} = $self->_load();
 
@@ -167,6 +195,8 @@ sub new {
 
 sub _load {
     my $self = shift;
+
+    return {} if $self->only_memory();
 
     my $fname = catfile(tmpdir(), $self->filename());
 
@@ -190,6 +220,8 @@ sub _load {
 
 sub _store {
     my $self = shift;
+
+    return 1 if $self->only_memory();
 
     my ($fh, $filename) = tempfile();
 
@@ -241,7 +273,7 @@ sub get {
 
 Takes a key and a value which is unconditionally inserted into the cache. Returns the cache object.
 
-The cache state is serialized during set operations.
+The cache state is serialized during set operations unless C<only_memory> is set.
 
 =cut
 

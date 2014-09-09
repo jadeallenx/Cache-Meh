@@ -3,7 +3,6 @@
 use strict;
 use Test::More;
 use Storable qw(retrieve);
-use Data::Dumper;
 
 plan tests => 1;
 
