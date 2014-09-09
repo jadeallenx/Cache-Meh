@@ -80,7 +80,7 @@ sub filename {
 
 =attr only_memory
 
-If this attribute is set, then B<DO> B<NOT> access the disk for reads or 
+If this attribute is set, then B<DO NOT> access the disk for reads or 
 writes. Only store cache values in memory. This option is mutually
 exclusive from the C<filename> attribute above.
 
@@ -154,9 +154,9 @@ sub lookup {
 
 =method new
 
-A constructor. You must provide the filename. You may optionally provide
-a validity time and lookup function. The cache state is loaded (if available)
-as part of object construction.
+A constructor. You must provide the filename unless C<only_memory> is set. 
+You may optionally provide a validity time and lookup function. The cache state
+is loaded (if available) as part of object construction.
 
 =cut
 
@@ -273,7 +273,7 @@ sub get {
 
 Takes a key and a value which is unconditionally inserted into the cache. Returns the cache object.
 
-The cache state is serialized during set operations.
+The cache state is serialized during set operations unless C<only_memory> is set.
 
 =cut
 
