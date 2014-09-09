@@ -4,7 +4,7 @@ Cache::Meh - A cache of indifferent quality
 
 # VERSION
 
-version 0.03
+version 0.04
 
 # SYNOPSIS
 
@@ -37,6 +37,8 @@ cache state is serialized to disk by [Storable](https://metacpan.org/pod/Storabl
 persists beyond a single execution environment which makes it suitable for
 things like cron tasks or CGI handlers and the like.
 
+You may optionally disable disk access by setting the `only_memory` attribute.
+
 Cache state is stored to disk when a key is set in the cache; keys are only
 purged from the cache when they expire and there is no `lookup` function
 available.  These are arguably bad design decisions which may encourage you
@@ -55,11 +57,18 @@ using something awesome like [CHI](https://metacpan.org/pod/CHI) or [Cache::Cach
 
 ## filename
 
-This is the filename for your [Storable](https://metacpan.org/pod/Storable) file. Required.
+This is the filename for your [Storable](https://metacpan.org/pod/Storable) file. Required unless you
+specify `only_memory`.
 
 The file is written to the "temporary" path as provided by [File::Spec](https://metacpan.org/pod/File::Spec) 
 `tmpdir`. On Unix systems, you may influence this directory by
 setting the `TMPDIR` environment variable.
+
+## only\_memory
+
+If this attribute is set, then **DO NOT** access the disk for reads or 
+writes. Only store cache values in memory. This option is mutually
+exclusive from the `filename` attribute above.
 
 ## validity
 
@@ -87,9 +96,9 @@ Optional; no default.
 
 ## new
 
-A constructor. You must provide the filename. You may optionally provide
-a validity time and lookup function. The cache state is loaded (if available)
-as part of object construction.
+A constructor. You must provide the filename unless `only_memory` is set. 
+You may optionally provide a validity time and lookup function. The cache state
+is loaded (if available) as part of object construction.
 
 ## get
 
@@ -100,7 +109,7 @@ value or undef if no lookup function is defined.
 
 Takes a key and a value which is unconditionally inserted into the cache. Returns the cache object.
 
-The cache state is serialized during set operations.
+The cache state is serialized during set operations unless `only_memory` is set.
 
 # AUTHOR
 

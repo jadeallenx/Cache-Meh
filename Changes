@@ -2,6 +2,9 @@ Change history for Cache-Meh
 
 {{$NEXT}}
 
+0.04        2014-09-08
+            Add a memory-only mode if "only_memory" is set.
+
 0.03        2014-04-07
             Close temp filehandle for better Windows compatibility
 
